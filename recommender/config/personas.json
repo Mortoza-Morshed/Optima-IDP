@@ -1,0 +1,39 @@
+{
+  "individual_contributor": {
+    "label": "Individual Contributor",
+    "description": "Hands-on engineer or analyst looking to deepen technical expertise.",
+    "weight_multipliers": {
+      "skill_gap": 1.1,
+      "difficulty_match": 1.0,
+      "resource_type": 0.9,
+      "skill_relevance": 1.0,
+      "skill_similarity": 1.0
+    },
+    "difficulty_offset": 0.3
+  },
+  "tech_lead": {
+    "label": "Tech Lead / Architect",
+    "description": "Senior engineer balancing strategy with hands-on work.",
+    "weight_multipliers": {
+      "skill_gap": 0.9,
+      "difficulty_match": 1.1,
+      "resource_type": 1.1,
+      "skill_relevance": 1.0,
+      "skill_similarity": 1.0
+    },
+    "difficulty_offset": 0.45
+  },
+  "manager": {
+    "label": "Manager / Leader",
+    "description": "People manager or executive focusing on strategy and leadership.",
+    "weight_multipliers": {
+      "skill_gap": 0.8,
+      "difficulty_match": 0.9,
+      "resource_type": 1.2,
+      "skill_relevance": 1.0,
+      "skill_similarity": 0.8
+    },
+    "difficulty_offset": 0.2
+  }
+}
+

@@ -9,9 +9,11 @@ Ranks learning resources based on multiple factors:
 - Skill similarity scores
 """
 
+import json
+from pathlib import Path
+from typing import Dict, Any, Optional, List
+
 import numpy as np
-from typing import List, Dict, Any, Optional
-from collections import defaultdict
 
 
 class ResourceRanker:
@@ -42,14 +44,44 @@ class ResourceRanker:
             'resource_type': 0.10,       # Lower weight: slight preference for certain types
             'skill_similarity': 0.10     # Lower weight: similarity to target skills
         }
+        self.persona_overrides = {}
+        self.default_persona = {
+            "weight_multipliers": {
+                "skill_gap": 1.0,
+                "skill_relevance": 1.0,
+                "difficulty_match": 1.0,
+                "resource_type": 1.0,
+                "skill_similarity": 1.0
+            },
+            "difficulty_offset": 0.3
+        }
+        self._load_persona_config()
+
+    def _load_persona_config(self):
+        """
+        Load persona configuration from JSON file if present.
+
+        Persona configs allow different weight multipliers and difficulty offsets
+        for distinct user archetypes (individual contributor, tech lead, manager, etc.).
+        """
+        config_path = Path(__file__).parent.parent / "config" / "personas.json"
+        if config_path.exists():
+            try:
+                self.persona_overrides = json.loads(config_path.read_text(encoding="utf-8"))
+            except Exception as exc:
+                print(f"Warning: failed to load persona config: {exc}")
+                self.persona_overrides = {}
+        else:
+            self.persona_overrides = {}
     
-    def rank_resources(self, 
+    def rank_resources(self,
                       resources: List[Dict[str, Any]],
                       user_skills: List[Dict[str, Any]],
                       skills_to_improve: List[Dict[str, Any]],
                       resource_features: Dict[str, Any],
                       similarity_matrix: Optional[np.ndarray] = None,
-                      skill_to_idx: Optional[Dict[str, int]] = None) -> List[Dict[str, Any]]:
+                      skill_to_idx: Optional[Dict[str, int]] = None,
+                      persona: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Rank resources based on multiple scoring factors.
         
@@ -65,6 +97,7 @@ class ResourceRanker:
             List of ranked resources with scores, sorted by relevance
         """
         ranked_resources = []
+        applied_weights, difficulty_offset = self._resolve_persona_settings(persona)
         
         # Build user skill level map for quick lookup
         user_skill_levels = self._build_user_skill_map(user_skills)
@@ -91,7 +124,7 @@ class ResourceRanker:
             )
             
             difficulty_match_score = self._calculate_difficulty_match_score(
-                skill_id, features, user_skill_levels, improvement_map
+                skill_id, features, user_skill_levels, improvement_map, difficulty_offset
             )
             
             resource_type_score = features.get('type', 0.7)
@@ -102,11 +135,11 @@ class ResourceRanker:
             
             # Calculate weighted total score
             total_score = (
-                self.weights['skill_gap'] * skill_gap_score +
-                self.weights['skill_relevance'] * skill_relevance_score +
-                self.weights['difficulty_match'] * difficulty_match_score +
-                self.weights['resource_type'] * resource_type_score +
-                self.weights['skill_similarity'] * skill_similarity_score
+                applied_weights['skill_gap'] * skill_gap_score +
+                applied_weights['skill_relevance'] * skill_relevance_score +
+                applied_weights['difficulty_match'] * difficulty_match_score +
+                applied_weights['resource_type'] * resource_type_score +
+                applied_weights['skill_similarity'] * skill_similarity_score
             )
             
             ranked_resources.append({
@@ -144,7 +177,7 @@ class ResourceRanker:
         """
         skill_map = {}
         for skill in user_skills:
-            skill_id = str(skill.get('skillId', ''))
+            skill_id = str(skill.get('skillId') or skill.get('skill', {}).get('_id', ''))
             level = skill.get('level', 1)  # Default to level 1 if not specified
             # Normalize level to 0-1 range (assuming 1-10 scale)
             # Level 1 -> 0.0, Level 10 -> 1.0
@@ -185,8 +218,36 @@ class ResourceRanker:
                 'targetLevel': skill_info.get('targetLevel', 5)
             }
         return improvement_map
+
+    def _resolve_persona_settings(self, persona: Optional[str]):
+        """
+        Determine weights and difficulty offset for the requested persona.
+
+        Args:
+            persona: Optional persona identifier provided by the client.
+
+        Returns:
+            Tuple (weights, difficulty_offset)
+        """
+        if persona and persona in self.persona_overrides:
+            override = self.persona_overrides[persona]
+        else:
+            override = self.default_persona
+
+        multipliers = override.get("weight_multipliers", {})
+        adjusted_weights = {}
+        for key in self.weights:
+            adjusted_weights[key] = self.weights[key] * multipliers.get(key, 1.0)
+
+        # Normalize adjusted weights to sum to 1 for stability
+        total = sum(adjusted_weights.values())
+        if total > 0:
+            adjusted_weights = {k: v / total for k, v in adjusted_weights.items()}
+
+        difficulty_offset = override.get("difficulty_offset", self.default_persona["difficulty_offset"])
+        return adjusted_weights, difficulty_offset
     
-    def _calculate_skill_gap_score(self, skill_id: str, 
+    def _calculate_skill_gap_score(self, skill_id: str,
                                    improvement_map: Dict[str, Dict[str, Any]]) -> float:
         """
         Calculate score based on how much the skill needs improvement.
@@ -245,7 +306,8 @@ class ResourceRanker:
     def _calculate_difficulty_match_score(self, skill_id: str,
                                          resource_features: Dict[str, Any],
                                          user_skill_levels: Dict[str, float],
-                                         improvement_map: Dict[str, Dict[str, Any]]) -> float:
+                                         improvement_map: Dict[str, Dict[str, Any]],
+                                         persona_offset: float) -> float:
         """
         Calculate how well the resource difficulty matches user's skill level.
         
@@ -280,7 +342,7 @@ class ResourceRanker:
         
         # Ideal difficulty is slightly above user level (for learning)
         # This encourages growth without being overwhelming
-        ideal_difficulty = user_level + 0.3
+        ideal_difficulty = user_level + persona_offset
         
         # Calculate how close resource difficulty is to ideal
         # Penalize resources that are too far from ideal

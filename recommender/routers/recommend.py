@@ -40,6 +40,7 @@ class RecommendationRequest(BaseModel):
     skills: List[Dict[str, Any]]  # All skills in the system
     user_skills_data: Optional[List[List[Dict[str, Any]]]] = []  # For co-occurrence
     limit: Optional[int] = 10  # Number of recommendations to return
+    persona: Optional[str] = None  # Persona identifier (e.g., 'manager', 'tech_lead')
 
 
 class SimilarSkillsRequest(BaseModel):
@@ -103,14 +104,15 @@ async def get_resource_recommendations(request: RecommendationRequest):
         # Step 4: Prepare resource features
         resource_features = preprocessor.prepare_resource_features(request.resources)
         
-        # Step 5: Rank resources
+        # Step 5: Rank resources using local engine
         ranked_resources = resource_ranker.rank_resources(
             resources=request.resources,
             user_skills=request.user_skills,
             skills_to_improve=skills_to_improve,
             resource_features=resource_features,
             similarity_matrix=similarity_matrix,
-            skill_to_idx=skill_mapping
+            skill_to_idx=skill_mapping,
+            persona=getattr(request, "persona", None)
         )
         
         # Step 6: Limit results and format response
@@ -131,11 +133,12 @@ async def get_resource_recommendations(request: RecommendationRequest):
                 },
                 'score': round(item['score'], 4),
                 'scoreBreakdown': {
-                    'skill_gap': round(item['breakdown']['skill_gap'], 4),
-                    'skill_relevance': round(item['breakdown']['skill_relevance'], 4),
-                    'difficulty_match': round(item['breakdown']['difficulty_match'], 4),
-                    'resource_type': round(item['breakdown']['resource_type'], 4),
-                    'skill_similarity': round(item['breakdown']['skill_similarity'], 4)
+                    'reason': item['breakdown'].get('reason', ''),
+                    'skill_gap': round(item['breakdown'].get('skill_gap', 0), 4),
+                    'skill_relevance': round(item['breakdown'].get('skill_relevance', 0), 4),
+                    'difficulty_match': round(item['breakdown'].get('difficulty_match', 0), 4),
+                    'resource_type': round(item['breakdown'].get('resource_type', 0), 4),
+                    'skill_similarity': round(item['breakdown'].get('skill_similarity', 0), 4)
                 },
                 'url': resource.get('url', ''),
                 'provider': resource.get('provider', 'Unknown')

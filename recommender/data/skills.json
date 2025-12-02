@@ -1,0 +1,110 @@
+[
+  {
+    "_id": "1",
+    "name": "Deep Learning",
+    "category": "Artificial Intelligence",
+    "description": "Designing, training, and deploying deep neural networks."
+  },
+  {
+    "_id": "2",
+    "name": "Natural Language Processing",
+    "category": "Artificial Intelligence",
+    "description": "Building systems that understand and generate human language."
+  },
+  {
+    "_id": "3",
+    "name": "MLOps",
+    "category": "Machine Learning Engineering",
+    "description": "Operationalizing machine learning models and pipelines."
+  },
+  {
+    "_id": "4",
+    "name": "Leadership",
+    "category": "Professional Development",
+    "description": "Leading teams, driving strategy, and coaching talent."
+  },
+  {
+    "_id": "5",
+    "name": "Data Engineering",
+    "category": "Data Platform",
+    "description": "Building and maintaining data pipelines and warehousing solutions."
+  },
+  {
+    "_id": "6",
+    "name": "AI Strategy",
+    "category": "Business",
+    "description": "Creating and communicating organization-wide AI initiatives."
+  },
+  {
+    "_id": "7",
+    "name": "Cloud Architecture",
+    "category": "Infrastructure",
+    "description": "Designing secure, scalable, and cost-efficient cloud solutions."
+  },
+  {
+    "_id": "8",
+    "name": "Product Management",
+    "category": "Business",
+    "description": "Driving product vision, roadmap, and stakeholder alignment."
+  },
+  {
+    "_id": "9",
+    "name": "DevOps",
+    "category": "Engineering",
+    "description": "Automating software delivery and reliability practices."
+  },
+  {
+    "_id": "10",
+    "name": "Responsible AI",
+    "category": "Ethics",
+    "description": "Ensuring AI systems are fair, transparent, and safe."
+  },
+  {
+    "_id": "11",
+    "name": "Computer Vision",
+    "category": "Artificial Intelligence",
+    "description": "Teaching computers to interpret and understand the visual world."
+  },
+  {
+    "_id": "12",
+    "name": "Reinforcement Learning",
+    "category": "Artificial Intelligence",
+    "description": "Training models to make sequences of decisions."
+  },
+  {
+    "_id": "13",
+    "name": "Kubernetes",
+    "category": "Infrastructure",
+    "description": "Container orchestration for automating deployment, scaling, and management."
+  },
+  {
+    "_id": "14",
+    "name": "React",
+    "category": "Frontend Development",
+    "description": "Building user interfaces with the React library."
+  },
+  {
+    "_id": "15",
+    "name": "Node.js",
+    "category": "Backend Development",
+    "description": "Building scalable network applications with JavaScript runtime."
+  },
+  {
+    "_id": "16",
+    "name": "Cybersecurity",
+    "category": "Security",
+    "description": "Protecting systems, networks, and programs from digital attacks."
+  },
+  {
+    "_id": "17",
+    "name": "Data Visualization",
+    "category": "Data",
+    "description": "Graphical representation of information and data."
+  },
+  {
+    "_id": "18",
+    "name": "Agile Methodologies",
+    "category": "Process",
+    "description": "Iterative approach to project management and software development."
+  }
+]
