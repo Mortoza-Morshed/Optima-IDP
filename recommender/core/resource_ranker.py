@@ -86,12 +86,13 @@ class ResourceRanker:
                       similarity_matrix: Optional[np.ndarray] = None,
                       skill_to_idx: Optional[Dict[str, int]] = None,
                       peer_data: Optional[List[Dict[str, Any]]] = None,
+                      custom_weights: Optional[Dict[str, float]] = None,
                       persona: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Rank resources based on multiple scoring factors.
         """
         ranked_resources = []
-        applied_weights, difficulty_offset = self._resolve_persona_settings(persona)
+        applied_weights, difficulty_offset = self._resolve_persona_settings(persona, custom_weights)
         
         # Build user skill level map for quick lookup
         user_skill_levels = self._build_user_skill_map(user_skills)
@@ -238,16 +239,34 @@ class ResourceRanker:
             }
         return improvement_map
 
-    def _resolve_persona_settings(self, persona: Optional[str]):
+    def _resolve_persona_settings(self, persona: Optional[str], custom_weights: Optional[Dict[str, float]] = None):
         """
         Determine weights and difficulty offset for the requested persona.
 
         Args:
             persona: Optional persona identifier provided by the client.
+            custom_weights: Optional weights provided by admin to override everything.
 
         Returns:
             Tuple (weights, difficulty_offset)
         """
+        # 1. Custom Weights (Highest Priority) - Admin Override
+        if custom_weights:
+            # Validate keys interact with known weights
+            valid_weights = {}
+            for k in self.weights:
+                if k in custom_weights:
+                     valid_weights[k] = custom_weights[k]
+                else:
+                     valid_weights[k] = self.weights[k]
+                     
+            difficulty_offset = self.default_persona["difficulty_offset"]
+            if persona and persona in self.persona_overrides:
+                 difficulty_offset = self.persona_overrides[persona].get("difficulty_offset", difficulty_offset)
+                 
+            return valid_weights, difficulty_offset
+
+        # 2. Persona Overrides (Normal Priority)
         if persona and persona in self.persona_overrides:
             override = self.persona_overrides[persona]
         else:

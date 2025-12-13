@@ -1,5 +1,5 @@
 const IDP = require("../models/idp");
-const User = require("../models/user");
+const User = require("../models/User");
 const Skill = require("../models/skill");
 const Resource = require("../models/resource");
 const recommenderService = require("../services/recommender.service");

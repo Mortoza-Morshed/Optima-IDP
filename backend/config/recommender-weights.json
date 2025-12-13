@@ -1,0 +1,8 @@
+{
+  "skill_gap": 0.35,
+  "skill_relevance": 0.25,
+  "difficulty_match": 0.2,
+  "collaborative": 0.2,
+  "resource_type": 0,
+  "skill_similarity": 0
+}

@@ -8,11 +8,14 @@ import ResetPassword from './pages/ResetPassword.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
+import IDPCreate from './pages/IDPCreate.jsx';
+import ScrollToAnchor from './components/ScrollToAnchor.jsx';
 
 function AppShell() {
   const { user } = useAuth(); // Get user state
   return (
     <div className="min-h-screen flex flex-col">
+      <ScrollToAnchor />
       <nav className="sticky top-0 z-50 bg-slate-800/90 backdrop-blur-lg border-b border-slate-700 shadow-lg">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -83,6 +86,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/idp/create" element={<IDPCreate />} />
           </Route>
         </Route>
       </Routes>

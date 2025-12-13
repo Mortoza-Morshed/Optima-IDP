@@ -23,7 +23,7 @@ app.use(helmet());
 // Rate Limiting Configuration
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // limit each IP to 1000 requests per windowMs
   message: "Too many requests from this IP, please try again later",
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
@@ -69,6 +69,9 @@ app.use("/api/idp", require("./routes/idp.routes"));
 app.use("/api/performance", require("./routes/performance.routes"));
 app.use("/api/recommender", require("./routes/recommender.routes"));
 app.use("/api/recommend", require("./routes/recommend.routes"));
+app.use("/api/admin", require("./routes/admin.routes"));
+app.use("/api/announcements", require("./routes/announcement.routes"));
+
 
 
 // Root welcome route

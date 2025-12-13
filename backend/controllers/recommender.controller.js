@@ -1,9 +1,48 @@
 const RecommenderService = require("../services/recommender.service");
-const User = require("../models/user");
+const User = require("../models/User");
 const Skill = require("../models/skill");
 const Resource = require("../models/resource");
 const PerformanceReport = require("../models/PerformanceReport");
 const IDP = require("../models/idp");
+const fs = require("fs");
+const path = require("path");
+
+const CONFIG_PATH = path.join(__dirname, "../config/recommender-weights.json");
+
+// DEFAULT WEIGHTS
+const DEFAULT_WEIGHTS = {
+    skill_gap: 0.35,
+    skill_relevance: 0.25,
+    difficulty_match: 0.20,
+    collaborative: 0.20,
+    resource_type: 0.00,
+    skill_similarity: 0.00
+};
+
+// Helper to get company-specific weights
+const getWeights = async (company) => {
+    try {
+        // Find the admin user for this company to get their custom weights
+        const adminUser = await User.findOne({ company, role: 'admin' });
+
+        if (adminUser && adminUser.companySettings && adminUser.companySettings.aiWeights) {
+            return adminUser.companySettings.aiWeights;
+        }
+
+        // Check legacy file (for backward compatibility)
+        if (fs.existsSync(CONFIG_PATH)) {
+            try {
+                return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+            } catch (e) {
+                console.error("Error reading legacy config:", e);
+            }
+        }
+    } catch (e) {
+        console.error("Error getting weights:", e);
+    }
+
+    return DEFAULT_WEIGHTS; // Return defaults if nothing found
+};
 
 exports.getSuggestions = async (req, res) => {
     try {
@@ -89,16 +128,19 @@ exports.getSuggestions = async (req, res) => {
 
         // 5. Construct Payload
         // Match RecommendationRequest model in Python
+        const params = await getWeights(user.company);
+
         const payload = {
             user_skills: userSkills,
             skills_to_improve: targetSkills || [], // [{ "skillId": "...", "gap": ... }]
             performance_reports: performanceReports,
             resources: formattedResources,
             skills: formattedSkills,
-            user_skills_data: [], // Legacy field, keeping for compatibility if needed
-            peer_data: peerData,  // NEW: Data for collaborative filtering
+            user_skills_data: [], // Legacy field
+            peer_data: peerData,  // Data for collaborative filtering
             limit: 10,
-            persona: user.role // "employee", "manager", etc.
+            persona: user.role, // "employee", "manager", etc.
+            custom_weights: params // Inject dynamic weights
         };
 
         // 6. Call Python Service

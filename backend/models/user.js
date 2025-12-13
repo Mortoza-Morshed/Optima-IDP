@@ -136,12 +136,153 @@ const UserSchema = new mongoose.Schema(
       default: true
     },
 
+    // Last Login Timestamp
+    lastLogin: {
+      type: Date,
+      default: null
+    },
+
+    // Company-Specific Security Settings (stored on admin user's record)
+    companySettings: {
+      inactiveLockoutDays: {
+        type: Number,
+        default: 90
+      },
+      enforcePasswordPolicy: {
+        type: Boolean,
+        default: true
+      },
+      aiWeights: {
+        skill_gap: { type: Number, default: 0.35 },
+        skill_relevance: { type: Number, default: 0.25 },
+        difficulty_match: { type: Number, default: 0.20 },
+        collaborative: { type: Number, default: 0.20 },
+        resource_type: { type: Number, default: 0.00 },
+        skill_similarity: { type: Number, default: 0.00 }
+      },
+      // Organizational Preferences
+      weeklyManagerReports: {
+        type: Boolean,
+        default: true
+      },
+      notifyManagerOnNewIDP: {
+        type: Boolean,
+        default: true
+      },
+      defaultTargetLevel: {
+        type: Number,
+        default: 5,
+        min: 1,
+        max: 10
+      },
+      timezone: {
+        type: String,
+        default: 'UTC'
+      }
+    },
+
     // Pending Profile Update Request
     profileUpdateRequest: {
       field: { type: String, enum: ['name'], default: null },
       value: { type: String, default: null },
       status: { type: String, enum: ['pending', 'approved', 'rejected'], default: null },
       requestedAt: { type: Date, default: null }
+    },
+
+    // API Keys for programmatic access (admins only)
+    apiKeys: [
+      {
+        keyHash: {
+          type: String,
+          required: true // bcrypt hashed API key
+        },
+        label: {
+          type: String,
+          required: true,
+          maxlength: 50
+        },
+        lastUsed: {
+          type: Date,
+          default: null
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now
+        }
+      }
+    ],
+
+    // Active sessions for session management
+    sessions: [
+      {
+        token: {
+          type: String,
+          required: true // session token or JWT ID
+        },
+        ip: {
+          type: String,
+          default: null
+        },
+        userAgent: {
+          type: String,
+          default: null
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now
+        },
+        expiresAt: {
+          type: Date,
+          required: true
+        },
+        isRevoked: {
+          type: Boolean,
+          default: false
+        }
+      }
+    ],
+
+    // Login history for security audit
+    loginHistory: [
+      {
+        ip: {
+          type: String,
+          default: null
+        },
+        userAgent: {
+          type: String,
+          default: null
+        },
+        timestamp: {
+          type: Date,
+          default: Date.now
+        },
+        success: {
+          type: Boolean,
+          required: true
+        },
+        failureReason: {
+          type: String,
+          default: null
+        }
+      }
+    ],
+
+    // MFA (Two-Factor Authentication)
+    mfaEnabled: {
+      type: Boolean,
+      default: false
+    },
+    mfaSecret: {
+      type: String,
+      default: null // TOTP secret for authenticator apps
+    },
+
+    // Manager reference (for employees only)
+    manager: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
     }
   },
 

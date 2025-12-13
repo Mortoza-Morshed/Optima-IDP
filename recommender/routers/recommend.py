@@ -40,6 +40,7 @@ class RecommendationRequest(BaseModel):
     skills: List[Dict[str, Any]]  # All skills in the system
     user_skills_data: Optional[List[List[Dict[str, Any]]]] = []  # Legacy co-occurrence data
     peer_data: Optional[List[Dict[str, Any]]] = []  # NEW: Peer skills and resources for Collaborative Filtering
+    custom_weights: Optional[Dict[str, float]] = None  # NEW: Dynamic weights from admin panel
     limit: Optional[int] = 10  # Number of recommendations to return
     persona: Optional[str] = None  # Persona identifier (e.g., 'manager', 'tech_lead')
 
@@ -114,6 +115,7 @@ async def get_resource_recommendations(request: RecommendationRequest):
             similarity_matrix=similarity_matrix,
             skill_to_idx=skill_mapping,
             peer_data=request.peer_data,  # Pass peer data
+            custom_weights=request.custom_weights,  # Pass dynamic weights
             persona=getattr(request, "persona", None)
         )
         

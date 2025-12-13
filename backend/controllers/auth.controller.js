@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
@@ -211,7 +211,12 @@ exports.login = async (req, res) => {
 
     // Create short-lived access token (15 minutes)
     const accessToken = jwt.sign(
-      { id: user._id, role: user.role },
+      {
+        id: user._id,
+        _id: user._id, // Added for compatibility
+        role: user.role,
+        company: user.company // Added for controllers
+      },
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
@@ -226,6 +231,10 @@ exports.login = async (req, res) => {
     // Save refresh token to database
     // This allows us to invalidate it on logout or security breach
     user.refreshToken = refreshToken;
+
+    // Track last login timestamp for security auditing
+    user.lastLogin = new Date();
+
     await user.save();
 
     res.json({
@@ -300,7 +309,12 @@ exports.refresh = async (req, res) => {
 
     // All checks passed! Issue a new access token
     const newAccessToken = jwt.sign(
-      { id: user._id, role: user.role },
+      {
+        id: user._id,
+        _id: user._id, // Added for compatibility
+        role: user.role,
+        company: user.company // Added for controllers
+      },
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );

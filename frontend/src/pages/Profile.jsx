@@ -1,10 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
 import { useAuth } from '../store/useAuth.jsx';
-import EmployeeOverview from '../components/Profile/EmployeeOverview';
-import ManagerOverview from '../components/Profile/ManagerOverview';
-import AdminOverview from '../components/Profile/AdminOverview';
-
+import AdminSecurityPanel from '../components/Profile/AdminSecurityPanel';
+import AdminPreferencesPanel from '../components/Profile/AdminPreferencesPanel';
 
 // Helper to get full image URL
 const getImageUrl = (path) => {
@@ -76,7 +74,6 @@ function Profile() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setMessage({ type: 'error', text: 'Image size too large (max 5MB)' });
       return;
@@ -115,13 +112,15 @@ function Profile() {
         }
         payload.password = formData.currentPassword;
         payload.newPassword = formData.newPassword;
+      } else if (activeTab === 'general') {
+        payload.name = formData.name;
       }
 
       const res = await api.put('/user/me', payload);
       setMessage({ type: 'success', text: 'Profile updated successfully' });
       setProfile(res.data.user);
 
-      // Clear password fields
+      // Clear password fields (but keep name)
       setFormData(prev => ({
         ...prev,
         currentPassword: '',
@@ -141,8 +140,8 @@ function Profile() {
   if (!profile && loading) return <div className="p-8 text-white">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 sm:p-8 font-sans">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 sm:p-8 font-sans flex justify-center">
+      <div className="max-w-7xl w-full">
 
         {/* Header */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 mb-8 flex flex-col md:flex-row items-center gap-8 shadow-xl">
@@ -185,9 +184,9 @@ function Profile() {
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
           {/* Sidebar Tabs */}
-          <div className="lg:col-span-1 space-y-2">
+          <div className="lg:col-span-1 space-y-2 lg:sticky lg:top-28 h-fit">
             <button
               onClick={() => setActiveTab('general')}
               className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${activeTab === 'general'
@@ -215,10 +214,20 @@ function Profile() {
             >
               Preferences
             </button>
+            <button
+              id="skills-tab"
+              onClick={() => setActiveTab('skills')}
+              className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${activeTab === 'skills'
+                ? 'bg-purple-600/10 text-purple-400 border border-purple-500/20'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                }`}
+            >
+              Skills
+            </button>
           </div>
 
           {/* Form Area */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-5">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
               <h2 className="text-xl font-semibold text-white mb-6 border-b border-slate-800 pb-4">
                 {activeTab === 'general' && 'General Information'}
@@ -235,64 +244,15 @@ function Profile() {
 
               {activeTab === 'general' && (
                 <div className="space-y-6 max-w-xl">
-                  {/* Active Role-Based Overview */}
-                  {profile?.role === 'employee' && <EmployeeOverview profile={profile} />}
-                  {profile?.role === 'manager' && <ManagerOverview profile={profile} />}
-                  {profile?.role === 'admin' && <AdminOverview profile={profile} />}
-
-                  {/* Divider for Profile Details */}
-                  <div className="border-t border-slate-800 pt-6 mt-8">
-                    <h3 className="text-lg font-semibold text-white mb-4">Profile Details</h3>
-                    <div className="space-y-6">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-2">Full Name</label>
-                        {profile?.role === 'admin' ? (
-                          <input
-                            type="text"
-                            name="name"
-                            value={formData.name !== undefined ? formData.name : profile?.name}
-                            onChange={handleChange}
-                            className="w-full bg-slate-950/50 border border-slate-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors"
-                          />
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="flex gap-2">
-                              <div className="flex-1 bg-slate-950/30 border border-slate-800 rounded-lg px-4 py-2.5 text-slate-300">
-                                {profile?.name}
-                              </div>
-
-                              {profile?.profileUpdateRequest?.status === 'pending' ? (
-                                <div className="px-4 py-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-400 text-sm flex items-center gap-2">
-                                  <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                  Change Pending: "{profile.profileUpdateRequest.value}"
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    const newName = prompt("Enter new name:");
-                                    if (newName && newName !== profile.name) {
-                                      // Call API to request update
-                                      api.post('/user/request-update', { name: newName })
-                                        .then(res => {
-                                          setProfile(res.data.user);
-                                          alert("Request submitted for approval.");
-                                        })
-                                        .catch(err => alert("Failed to submit request"));
-                                    }
-                                  }}
-                                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg border border-slate-700 transition-colors"
-                                >
-                                  Request Edit
-                                </button>
-                              )}
-                            </div>
-                            {profile?.profileUpdateRequest?.status === 'rejected' && (
-                              <p className="text-xs text-rose-400">Previous request was rejected.</p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Full Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name || ''}
+                      onChange={handleChange}
+                      className="w-full bg-slate-950/50 border border-slate-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors"
+                    />
                   </div>
 
                   <div>
@@ -302,29 +262,15 @@ function Profile() {
                     </div>
                   </div>
 
-                  {profile?.role === 'admin' && (
-                    <div className="pt-4">
-                      <button
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          setLoading(true);
-                          try {
-                            const res = await api.put('/user/me', { name: formData.name });
-                            setProfile(res.data.user);
-                            setMessage({ type: 'success', text: 'Profile updated successfully' });
-                          } catch (err) {
-                            setMessage({ type: 'error', text: 'Failed to update profile' });
-                          } finally {
-                            setLoading(false);
-                          }
-                        }}
-                        disabled={loading}
-                        className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        {loading ? 'Saving...' : 'Save Changes'}
-                      </button>
-                    </div>
-                  )}
+                  <div className="pt-4">
+                    <button
+                      onClick={handleUpdate}
+                      disabled={loading}
+                      className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {loading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -332,7 +278,6 @@ function Profile() {
                 <div className="space-y-8 max-w-xl">
                   {/* Password Update - Available for everyone */}
                   <form onSubmit={handleUpdate} className="space-y-6">
-                    <h3 className="text-lg font-medium text-white border-b border-slate-800 pb-2">Password Update</h3>
                     <div>
                       <label className="block text-sm font-medium text-slate-400 mb-2">Current Password</label>
                       <input
@@ -377,42 +322,7 @@ function Profile() {
 
                   {/* Admin Specific Security Options */}
                   {profile?.role === 'admin' && (
-                    <div className="pt-6 border-t border-slate-800 space-y-6">
-                      <h3 className="text-lg font-medium text-white border-b border-slate-800 pb-2">Admin Security Panel</h3>
-
-                      <div className="flex items-center justify-between p-4 bg-slate-950 rounded-lg border border-slate-800">
-                        <div>
-                          <h4 className="text-white font-medium">Enforce Two-Factor Auth</h4>
-                          <p className="text-sm text-slate-400">Require MFA for all admins and managers</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={profile?.preferences?.twoFactorEnabled ?? false}
-                            onChange={async (e) => {
-                              const newVal = e.target.checked;
-                              const oldProfile = { ...profile };
-                              setProfile(prev => ({
-                                ...prev,
-                                preferences: { ...prev.preferences, twoFactorEnabled: newVal }
-                              }));
-
-                              try {
-                                await api.put('/user/me', {
-                                  preferences: { twoFactorEnabled: newVal }
-                                });
-                                setMessage({ type: 'success', text: `Two-Factor Auth ${newVal ? 'Enabled' : 'Disabled'}` });
-                              } catch (err) {
-                                setProfile(oldProfile);
-                                setMessage({ type: 'error', text: 'Failed to update setting' });
-                              }
-                            }}
-                          />
-                          <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                        </label>
-                      </div>
-                    </div>
+                    <AdminSecurityPanel />
                   )}
                 </div>
               )}
@@ -527,42 +437,30 @@ function Profile() {
 
                   {/* Admin Specific Preferences */}
                   {profile?.role === 'admin' && (
-                    <div className="pt-6 border-t border-slate-800">
-                      <h3 className="text-lg font-medium text-white mb-4">Global Preferences</h3>
-                      <div className="flex items-center justify-between p-4 bg-slate-950 rounded-lg border border-slate-800">
-                        <div>
-                          <h4 className="text-white font-medium">System Branding</h4>
-                          <p className="text-sm text-slate-400">Display custom company logo on login</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={profile?.preferences?.systemBranding ?? true}
-                            onChange={async (e) => {
-                              const newVal = e.target.checked;
-                              const oldProfile = { ...profile };
-                              setProfile(prev => ({
-                                ...prev,
-                                preferences: { ...prev.preferences, systemBranding: newVal }
-                              }));
-
-                              try {
-                                await api.put('/user/me', {
-                                  preferences: { systemBranding: newVal }
-                                });
-                                setMessage({ type: 'success', text: 'Preference updated' });
-                              } catch (err) {
-                                setProfile(oldProfile);
-                                setMessage({ type: 'error', text: 'Failed to update preference' });
-                              }
-                            }}
-                          />
-                          <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                        </label>
-                      </div>
-                    </div>
+                    <AdminPreferencesPanel />
                   )}
+                </div>
+              )}
+
+              {activeTab === 'skills' && (
+                <div id="skills" className="space-y-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium text-white">My Skills</h3>
+                    <button className="text-xs bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded transition-colors" onClick={() => alert("Skill assessment feature coming soon!")}>
+                      Take Assessment
+                    </button>
+                  </div>
+                  <div className="p-8 border-2 border-dashed border-slate-800 rounded-xl text-center bg-slate-900/50">
+                    <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-slate-300 font-medium mb-2">No skills recorded yet</h4>
+                    <p className="text-slate-500 text-sm max-w-sm mx-auto">
+                      Start adding your verified skills to get personalized IDP recommendations.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

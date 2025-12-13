@@ -1,11 +1,16 @@
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../store/useAuth.jsx';
+import AdminHome from '../components/Home/AdminHome';
 
 function Home() {
   const { user } = useAuth();
 
   // Authenticated View
   if (user) {
+    if (user.role === 'admin') {
+      return <AdminHome user={user} />;
+    }
+
     return (
       <div className="min-h-[85vh] flex flex-col items-center justify-center px-4 text-center">
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
