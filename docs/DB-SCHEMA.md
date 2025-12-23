@@ -77,3 +77,79 @@ Manager evaluations of employee performance.
 | `managerComments` | String | No | Overall comments |
 | `createdAt` | Date | - | Auto-generated timestamp |
 | `updatedAt` | Date | - | Auto-generated timestamp |
+
+## Announcement
+Org-wide announcements posted by admins.
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `company` | String | Yes | Company identifier (multi-tenant support) |
+| `title` | String | Yes | Announcement title |
+| `content` | String | Yes | Body content |
+| `author` | ObjectId | Yes | Reference to `User` (Admin) |
+| `attachment` | Object | No | `{ filename, mimetype, data }` |
+| `targetRoles` | Array | No | `employee`, `manager`, `admin`. Empty = All |
+| `viewedBy` | Array | No | List of `{ user, viewedAt }` |
+| `expiresAt` | Date | No | Auto-deletion date |
+| `createdAt` | Date | - | Auto-generated timestamp |
+
+## Assignment
+Tasks assigned to employees by managers/admins.
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `title` | String | Yes | Task title |
+| `description` | String | No | Details |
+| `assignedBy` | ObjectId | Yes | Reference to `User` (Manager/Admin) |
+| `assignedTo` | Array | No | List of `User` IDs |
+| `dueDate` | Date | Yes | Deadline |
+| `priority` | String | No | `normal`, `urgent` |
+| `status` | String | No | `pending`, `completed` |
+| `createdAt` | Date | - | Auto-generated timestamp |
+
+## CheckIn
+Scheduled meetings or sync-ups.
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `title` | String | Yes | Event title |
+| `type` | String | No | `Weekly Sync`, `Performance Review`, etc. |
+| `date` | Date | Yes | Scheduled time |
+| `manager` | ObjectId | Yes | Organizer (`User`) |
+| `attendee` | ObjectId | No | Specific team member (`User`) or null for team |
+| `createdAt` | Date | - | Auto-generated timestamp |
+
+## AuditLog
+Trail for admin and critical actions.
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `company` | String | Yes | Company identifier |
+| `actor` | ObjectId | Yes | Who performed the action (`User`) |
+| `action` | String | Yes | Enum (e.g., `APPROVE_USER`, `UPDATE_ORG_SETTINGS`) |
+| `target` | String | No | ID of affected entity |
+| `details` | Mixed | No | JSON details |
+| `status` | String | No | `success`, `failure` |
+| `createdAt` | Date | - | Auto-generated timestamp |
+
+## OrgSettings
+Organization-level configurations.
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `company` | String | Yes | Unique company name |
+| `branding` | Object | No | `{ logo, primaryColor, secondaryColor }` |
+| `policies` | Object | No | `{ approvalRequired, passwordPolicy, etc. }` |
+| `recommenderDefaults` | Object | No | Weights for algorithm |
+| `skillTargets` | Array | No | Company-wide skill goals |
+| `createdAt` | Date | - | Auto-generated timestamp |
+
+## Feedback
+User interaction with resources.
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `user` | ObjectId | Yes | Reference to `User` |
+| `resource` | ObjectId | Yes | Reference to `Resource` |
+| `action` | String | Yes | `view`, `click`, `like`, `dislike` |
+| `createdAt` | Date | - | Auto-generated timestamp |

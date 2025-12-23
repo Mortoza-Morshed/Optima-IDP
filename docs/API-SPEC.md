@@ -59,17 +59,47 @@ Base URL: `/api` (typically)
 | `GET` | `/performance/employee/:id` | Manager/Admin get reports for employee | Yes |
 | `GET` | `/performance/all` | Admin gets all reports | Yes |
 
-### Manager Routes (New)
+### Manager Routes
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/manager/stats` | Get team skill trends and department stats | Yes (Manager/Admin) |
 | `GET` | `/manager/checkins` | Get upcoming check-ins for team | Yes (Manager/Admin) |
 | `POST` | `/manager/kudos` | Send kudos to a team member | Yes (Manager/Admin) |
 
-### Employee Dashboard Routes (New)
+### Employee Dashboard Routes
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/emp-dashboard/deadlines` | Get unified list of IDP and Performance deadlines | Yes |
+
+### Announcement Routes
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/announcements` | Get all announcements (role filtered) | Yes |
+| `POST` | `/announcements` | Create announcement (Admin/Manager) | Yes |
+| `GET` | `/announcements/:id/attachment` | Download attachment | Yes |
+| `POST` | `/announcements/:id/view` | Mark as viewed | Yes |
+| `DELETE` | `/announcements/:id` | Delete announcement | Yes |
+
+### Assignment Routes
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/assignments` | Create assignment (Manager/Admin) | Yes |
+| `GET` | `/assignments/my` | Get assigned tasks (Employee) | Yes |
+
+### File Routes
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/files/:filename` | Retrieve a file (e.g., logo, attachment) | Yes |
+
+### Admin & System Routes (Admin Only)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/admin/system-health` | System status check | Yes (Admin) |
+| `GET` | `/admin/audit-logs` | View system audit logs | Yes (Admin) |
+| `GET` | `/admin/org-settings` | Get organization settings | Yes (Admin) |
+| `PUT` | `/admin/org-settings` | Update organization settings | Yes (Admin) |
+| `GET` | `/admin/dashboard/kpis` | Organization KPIs | Yes (Admin) |
+| `GET` | `/admin/approvals` | Pending user approvals | Yes (Admin) |
 
 ### Recommendation Routes (Proxy to Python Service)
 | Method | Endpoint | Description | Auth Required |

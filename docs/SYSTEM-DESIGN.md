@@ -1,7 +1,7 @@
 # System Design Overview
 
 ## Architecture
-Optima IDP follows a microservices-inspired architecture with a main backend API and a specialized recommendation service.
+Optima IDP follows a microservices-inspired architecture with a main backend API and a specialized recommendation service, designed to run in a local development environment.
 
 ### Components
 
@@ -23,7 +23,7 @@ Optima IDP follows a microservices-inspired architecture with a main backend API
 
 3.  **Database (MongoDB)**
     *   **Role**: Central data store.
-    *   **Collections**: Users, Skills, Resources, IDPs, PerformanceReports.
+    *   **Collections**: Users, Skills, Resources, IDPs, PerformanceReports, AuditLog, CheckIn, Annoucement.
 
 4.  **Redis & Queue**
     *   **Role**: Caching and Async Message Broker.
@@ -38,7 +38,7 @@ Optima IDP follows a microservices-inspired architecture with a main backend API
         *   Generates recommendations using FAISS/Embeddings.
         *   Updates IDP status in MongoDB.
 
-4.  **Frontend (React - Assumed)**
+6.  **Frontend (React)**
     *   **Role**: User interface for Employees, Managers, and Admins.
     *   **Interaction**: Consumes Backend API.
 
@@ -51,16 +51,17 @@ Optima IDP follows a microservices-inspired architecture with a main backend API
     *   Backend creates IDP with `processing` status.
     *   Backend pushes job to **Redis Queue**.
     *   **Python Worker** picks up job, runs ML logic, and updates IDP in MongoDB.
-    *   Frontend polls for status change or receives update via WebSocket (future).
+    *   Frontend polls for status change.
 
-## Deployment & Infrastructure
+## Local Development Infrastructure
 
-### Containerization (Docker)
-The entire application is containerized using Docker Compose:
-*   **Backend**: Node.js 18 Alpine image.
-*   **Recommender**: Python 3.10 Slim image.
-*   **Database**: MongoDB 6.
-*   **Cache/Queue**: Redis 7.
+This project is currently configured for local execution without Docker (though the architecture supports containerization).
+
+### Requirements
+*   **Node.js**: v16+
+*   **Python**: v3.9+ (with Virtual Environment)
+*   **MongoDB**: Running locally on port `27017`
+*   **Redis**: Running locally on port `6379` (Use WSL on Windows)
 
 ### Reliability Patterns
 *   **Reliable Queue**: The worker uses the `BRPOPLPUSH` pattern (RPOPLPUSH) to prevent data loss.
@@ -73,3 +74,4 @@ The entire application is containerized using Docker Compose:
 *   **Intelligent Recommendations**: Suggests resources based on skill gaps and performance reviews.
 *   **Performance Integration**: IDPs are informed by manager feedback.
 *   **Secure Authentication**: Dual-token system (Access + Refresh) with server-side logout.
+*   **Admin Audit**: Comprehensive auditing of all critical actions.
