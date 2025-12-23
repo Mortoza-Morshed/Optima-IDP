@@ -440,13 +440,11 @@ exports.toggleResourceStatus = async (req, res) => {
     const allCompleted = idp.recommendedResources.every(r => r.status === 'completed');
 
     if (allCompleted) {
-      // Save current status before marking pending_completion, if it wasn't already pending_completion
-
-      // Move to pending_completion instead of completed
+      // Move to pending_completion for Manager approval
       idp.status = 'pending_completion';
-
-      // NOTE: Skill updates are now moved to approveIDP, waiting for manager approval.
-
+    } else if (idp.status === 'pending_completion') {
+      // If it was pending_completion but a user un-checks a resource,
+      // move it back to 'approved' so it stays active in their dashboard.
       idp.status = 'approved';
     }
 
@@ -455,7 +453,7 @@ exports.toggleResourceStatus = async (req, res) => {
     await idp.save();
 
     res.json({
-      message: allCompleted ? "Resource updated. IDP Completed! Skills updated." : "Resource status updated",
+      message: allCompleted ? "Resource updated. IDP sent for Manager Approval." : "Resource status updated",
       idp
     });
 
